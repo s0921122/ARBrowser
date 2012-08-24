@@ -22,14 +22,13 @@ package jp.nyatla.kGLModel;
 
 import java.util.*;
 import java.nio.*;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
 import java.io.*;           // For File
-import java.io.InputStream;
 //import java.awt.image.*;    // For BufferedImage
 //import javax.imageio.*;     // For ImageIO
 
 import javax.microedition.khronos.opengles.*;
+
+import jp.androidgroup.nyartoolkit.GlobalArea;
 
 import android.content.res.*;
 import android.graphics.*;
@@ -46,6 +45,7 @@ import android.opengl.GLUtils;
  *
  */
 public class KGLTextures {
+	GlobalArea area = GlobalArea.getInstace();
     public AssetManager am;
     /**
      * texture nameの保存コンテナ<br>
@@ -165,7 +165,9 @@ public class KGLTextures {
     protected Bitmap loadTexture(String texname, String alpname)
     {
 		try {
-			InputStream is = am.open(texname);
+			//InputStream is = am.open(texname);
+			String tpath = area.path + "/" + area.getModelname().substring(0, area.getModelname().length()-4) + ".jpg";
+			InputStream is = new FileInputStream(new File(tpath));
 			return BitmapFactory.decodeStream(is);
 		} catch (Throwable e) {
 		}

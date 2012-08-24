@@ -37,43 +37,35 @@
 
 package jp.androidgroup.nyartoolkit;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import com.android.camera.CameraHardwareException;
-import com.android.camera.CameraHolder;
-import com.android.camera.Util;
-
-import min3d.Shared;
 import min3d.animation.AnimationObject3d;
-import min3d.core.Renderer;
 import min3d.core.Scene;
 import min3d.parser.IParser;
 import min3d.parser.Parser;
 import min3d.vos.Light;
-import min3d.vos.TextureVo;
-
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
-import android.hardware.Camera.PreviewCallback;
 import android.media.MediaPlayer;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
@@ -87,12 +79,14 @@ import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.View.OnTouchListener;
-import android.view.ViewGroup.LayoutParams;
+import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
+
+import com.android.camera.CameraHardwareException;
+import com.android.camera.CameraHolder;
 
 //public class NyARToolkitAndroidActivity extends Activity implements View.OnClickListener, SurfaceHolder.Callback {
 public class NyARToolkitAndroidActivity extends Activity implements View.OnClickListener, SurfaceHolder.Callback, min3d.interfaces.ISceneController {
@@ -151,6 +145,9 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	private ARToolkitDrawer arToolkitDrawer = null;
 
 	private MediaPlayer mMediaPlayer = null;
+	
+	// 別のクラスで使えるように値を保持するクラス
+	GlobalArea area = GlobalArea.getInstace();
 	
 	//重みづけクラス
 	//private WeightingWord Weight = new WeightingWord();
@@ -486,6 +483,14 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		win.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.main);
+        Button Select_btn = (Button)findViewById(R.id.btn_select);
+        Select_btn.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// TODO 自動生成されたメソッド・スタブ
+				SelectModelFile();
+			}
+		});
         mSurfaceView = (SurfaceView) findViewById(R.id.camera_preview);
 		mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -821,9 +826,74 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mHandler.sendEmptyMessageDelayed(CLEAR_SCREEN_DELAY, SCREEN_DELAY);
     }
+    
+    private void SelectModelFile(){
+		// ファイルリストを取得
+		String[] items = new File(area.path).list();
+		ArrayList<String> mqo = new ArrayList<String>();
+		// 拡張子がmqoのものだけを抽出
+		for(int i=0;items.length>i;i++){
+			if(items[i].endsWith("mqo")){
+				mqo.add(items[i]);
+			}
+		}
+		// キャンセル用
+		mqo.add("キャンセル");
 
-//----------------------- for min3d ------------------------
-	public Scene scene;
+		// 表示用の配列
+		final String[] mqolist = (String[]) mqo.toArray(new String[0]);
+		
+		// ファイル選択ダイアログ
+		new AlertDialog.Builder(this)
+		.setTitle("ファイルを選択")
+		.setItems(mqolist, new DialogInterface.OnClickListener(){
+			public void onClick(DialogInterface dialog, int which) {
+				// 選択されたものがmqoのとき
+				if (which < mqolist.length-1){
+					// 選択されたモデル名を取得
+					area.setModelname(mqolist[which]);
+					
+					ini2();
+					
+					//File filePath = new File(path + "/" + mqolist[which]);
+					//Toast.makeText(NyDropLink.this,"ファイルパス：「" + filePath.getPath() + "」を選択しました。", Toast.LENGTH_LONG).show();
+				}
+			}
+		}
+				).show();
+	}
+
+    private void ini2(){
+    	
+    	FrameLayout frame = (FrameLayout)findViewById(R.id.frame);
+    	frame.removeView(mGLSurfaceView);
+    	mGLSurfaceView = null;
+    	arToolkitDrawer = null;
+    	
+    	InputStream camePara = getResources().openRawResource(R.raw.camera_para);
+    	int[] width = new int[2];
+    	for (int i = 0; i < 2; i++) {
+    		width[i] = 80;
+    	}
+    	// パターン登録？
+    	ArrayList<InputStream> patt = new ArrayList<InputStream>();
+    	patt.add(getResources().openRawResource(R.raw.pattnizimasu));
+    	patt.add(getResources().openRawResource(R.raw.pattmaazi));
+    	arToolkitDrawer = new ARToolkitDrawer(camePara, width, patt, mRenderer);
+    	
+    	
+    	mGLSurfaceView = new GLSurfaceView(this);
+		mGLSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+		mGLSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
+		mGLSurfaceView.setZOrderOnTop(true);
+		mGLSurfaceView.setRenderer(mRenderer);
+		frame.addView(mGLSurfaceView);
+        
+    }
+
+
+    //----------------------- for min3d ------------------------
+    public Scene scene;
 
 	protected Handler _initSceneHander;
 	protected Handler _updateSceneHander;
