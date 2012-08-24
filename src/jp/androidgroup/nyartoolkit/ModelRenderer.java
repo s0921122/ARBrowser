@@ -40,6 +40,8 @@ package jp.androidgroup.nyartoolkit;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import java.io.Serializable;
+
 import jp.nyatla.kGLModel.KGLException;
 import jp.nyatla.kGLModel.KGLModelData;
 
@@ -57,9 +59,24 @@ import android.util.Log;
  * @author noritsuna
  *
  */
+
 public class ModelRenderer implements GLSurfaceView.Renderer
 {
-
+	//回転
+	public float xrot = 0;
+    public float yrot = 0;
+    public float zrot = 0;
+    public float xpos = 0;
+    public float ypos = 0;
+    public float zpos = 0;
+    
+    //3DCGの表示スケール初期化
+    public float scale = 2f;
+    
+    public int STATE = STATE_DYNAMIC;
+    public static final int STATE_DYNAMIC = 0;
+    public static final int STATE_FINALIZED = 1;
+    
 	private static final int PATT_MAX = 2;
 	private static final int MARKER_MAX = 8;
 
@@ -79,13 +96,38 @@ public class ModelRenderer implements GLSurfaceView.Renderer
 	
 	public int mWidth;
 	public int mHeight;
+	
+	Timer timer = new Timer();
 
+	public void setScale(float f) {
+		this.scale += f;
+		if(this.scale < 0.0001f)
+			this.scale = 0.0001f;
+	}
+
+	public void setXrot(float dY) {
+		this.xrot += dY;
+	}
+
+	public void setYrot(float dX) {
+		this.yrot += dX;
+	}
+
+	public void setXpos(float f) {
+		this.xpos += f;
+	}
+
+	public void setYpos(float f) {
+		this.ypos += f;
+	}
+	
 	public ModelRenderer(AssetManager am, String[] modelName, float[] modelScale) {
         this.am = am;
 		cameraReset();
 		for (int i = 0; i < PATT_MAX; i++) {
 	        this.modelName[i] = modelName[i];
 			this.modelScale[i] = modelScale[i];
+//System.out.println("マーカーname " + modelName[i]);
 		}
     }
 
@@ -128,6 +170,8 @@ public class ModelRenderer implements GLSurfaceView.Renderer
     }
 
     public void onDrawFrame(GL10 gl) {
+    	//3DCG表示時間の計測開始
+    	timer.start();		
 		/*
 		 * Usually, the first thing one might want to do is to clear
 		 * the screen. The most efficient way of doing this is to use
@@ -136,7 +180,7 @@ public class ModelRenderer implements GLSurfaceView.Renderer
 
 		//gl.glClearColor(bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
-
+		
 		if (drawp) {
 			// camera
 			if (useRHfp) {
@@ -152,9 +196,13 @@ public class ModelRenderer implements GLSurfaceView.Renderer
  				if (useRHfp) {
  					gl.glLoadMatrixf(resultf[i], 0);
  					// 位置調整
- 					gl.glTranslatef(0.0f, 0.0f, 0.0f);
+ 					gl.glTranslatef(this.xpos, this.ypos, this.zpos);
  					// OpenGL座標系→ARToolkit座標系
- 					gl.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+ 					gl.glRotatef(this.xrot, 1.0f,0.0f,0.0f);
+ 					gl.glRotatef(this.yrot, 0.0f,1.0f,0.0f);
+ 					gl.glRotatef(this.zrot, 0.0f,0.0f,1.0f);
+ 					
+ 					gl.glScalef(this.scale, this.scale, this.scale);
  				} else {
  					gl.glLoadIdentity();
  				}
@@ -164,6 +212,7 @@ public class ModelRenderer implements GLSurfaceView.Renderer
  				model[ar_code_index[i]].enables(gl, 1.0f);
  				model[ar_code_index[i]].draw(gl);
  				model[ar_code_index[i]].disables(gl);
+//System.out.println("マーカーname " + ar_code_index[i]);
  				if (lightp)
  					lightCleanup(gl);
  			}
@@ -173,6 +222,9 @@ public class ModelRenderer implements GLSurfaceView.Renderer
  	 		gl.glEnable(GL10.GL_DEPTH_TEST);
 		}
 		makeFramerate();
+		
+    	//3DCG表示時間の計測終了
+		timer.end();
     }
 
 	private Handler mainHandler;
@@ -192,6 +244,7 @@ public class ModelRenderer implements GLSurfaceView.Renderer
 			if (model[i] != null) {
 				model[i].Clear(gl);
 				model[i] = null;
+//System.out.println("マーカーname " + model[i]);
 			}
 			if (modelName[i] != null) {
 				try {
@@ -291,6 +344,7 @@ public class ModelRenderer implements GLSurfaceView.Renderer
 			for (int i = 0; i < MARKER_MAX; i++) {
 				this.ar_code_index[i] = ar_code_index[i];
 				System.arraycopy(resultf[i], 0, this.resultf[i], 0, 16);
+//System.out.println("マーカーname " + ar_code_index[i]);
 			}
 			System.arraycopy(cameraRHf, 0, this.cameraRHf, 0, 16);
 		}

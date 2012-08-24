@@ -46,7 +46,7 @@ import android.util.Log;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import min3d.core.Renderer;
+//import min3d.core.Renderer;
 
 import jp.nyatla.nyartoolkit.NyARException;
 import jp.nyatla.nyartoolkit.core.NyARCode;
@@ -109,9 +109,9 @@ public class ARToolkitDrawer
 
 
 	// Renderer for metasequoia model
-//	private ModelRenderer mRenderer = null;
+	private ModelRenderer mRenderer = null;
 	// Renderer of min3d
-    private Renderer mRenderer;
+//    private Renderer mRenderer;
 
 	private MediaPlayer mMediaPlayer = null;
 
@@ -131,9 +131,9 @@ public class ARToolkitDrawer
 	 * @param isYuv420spPreviewFormat
 	 */
 	// Renderer for metasequoia model
-//	public ARToolkitDrawer(InputStream camePara, int[] width, ArrayList<InputStream> patt, ModelRenderer mRenderer) {
+	public ARToolkitDrawer(InputStream camePara, int[] width, ArrayList<InputStream> patt, ModelRenderer mRenderer) {
 	// Renderer of min3d
-	public ARToolkitDrawer(InputStream camePara, int[] width, ArrayList<InputStream> patt, Renderer mRenderer) {
+//	public ARToolkitDrawer(InputStream camePara, int[] width, ArrayList<InputStream> patt, Renderer mRenderer) {
 		this.mRenderer = mRenderer;
 
 		this.initialization(camePara, width, patt);
@@ -145,6 +145,7 @@ public class ARToolkitDrawer
 	 */
 	private void initialization(InputStream camePara, int[] width, ArrayList<InputStream> patt) {
 		mNumPatt = patt.size();
+//System.out.println("マーカーサイズ " + patt.size());
 		marker_width = new double[mNumPatt];
 		ar_code = new NyARCode[mNumPatt];
 		try {
@@ -181,6 +182,7 @@ public class ARToolkitDrawer
 				// NyARDetectMarker 内にコメントを追加したのでその部分を参照のこと
 				nya = new NyARDetectMarker(ar_param, ar_code, marker_width, mNumPatt, NyARBufferType.BYTE1D_B8G8R8_24);
 				nya.setContinueMode(true);
+//System.out.println("マーカー情報　　" + nya);
 			}
 			Log.d("nyar", "resources have been loaded");
 		} catch (Exception e) {
@@ -281,11 +283,12 @@ public class ARToolkitDrawer
 			if (found_markers > MARKER_MAX)
 				found_markers = MARKER_MAX;
 			for (int i = 0; i < found_markers; i++) {
-				if (nya.getConfidence(i) < 0.60f)
+				if (nya.getConfidence(i) < 0.50f)
 					continue;
 				try {
 					ar_code_index[i] = nya.getARCodeIndex(i);
 					NyARTransMatResult transmat_result = ar_transmat_result;
+					//マーカーの一致度取得
 					nya.getTransmationMatrix(i, transmat_result);
 					toCameraViewRHf(transmat_result, resultf[i]);
 					isDetect = true;

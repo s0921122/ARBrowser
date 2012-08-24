@@ -4,5 +4,18 @@
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
+    <!-- title for the dialog showing the error of camera hardware -->
+    <string name="camera_error_title">Camera error</string>
 
+    <!-- message for the dialog showing the error of camera hardware -->
+    <string name="cannot_connect_camera">Cannot connect to camera.</string>
+
+    <!-- Details dialog "OK" button. Dismisses dialog. -->
+    <string name="details_ok">OK</string>
+
+	<string name="app_name">NyARToolkit Android</string>
+	<string name="rotate">回転</string>
+	<string name="translate">移動</string>
+	<string name="scale">スケール</string>
+	<string name="take_screenshot">画像保存</string>
 </resources>

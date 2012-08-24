@@ -42,6 +42,7 @@ import java.util.ArrayList;
 
 import com.android.camera.CameraHardwareException;
 import com.android.camera.CameraHolder;
+import com.android.camera.Util;
 
 import min3d.Shared;
 import min3d.animation.AnimationObject3d;
@@ -55,12 +56,17 @@ import min3d.vos.TextureVo;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
@@ -72,6 +78,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Display;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
@@ -79,6 +89,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -106,7 +117,16 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	
     private static final int IDLE = 1;
     private static final int SNAPSHOT_IN_PROGRESS = 2;
+
+    private final int MENU_SCALE = 0;
+	private final int MENU_ROTATE = 1;
+	private final int MENU_TRANSLATE = 2;
+	private final int MENU_SCREENSHOT = 3;
 	
+	private int mode = 0;
+	
+	//private Resources res;
+	//public ModelRenderer model;
 	private int mStatus = IDLE;
 
     private android.hardware.Camera mCameraDevice;
@@ -116,9 +136,9 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 
     private GLSurfaceView mGLSurfaceView = null;
 	// Renderer for metasequoia model
-//    private ModelRenderer mRenderer;
+    private ModelRenderer mRenderer;
 	// Renderer of min3d
-    private Renderer mRenderer;
+   // private Renderer mRenderer;
 
 	private boolean mPreviewing;
 	private boolean mPausing;
@@ -131,7 +151,53 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	private ARToolkitDrawer arToolkitDrawer = null;
 
 	private MediaPlayer mMediaPlayer = null;
+	
+	//重みづけクラス
+	//private WeightingWord Weight = new WeightingWord();
+	
+	//DB生成クラス
+	WeightDBcreate WeightDB = null;
+	SQLiteDatabase db = null;
+	
+	//PattファイルのID
+	private int Pattid;
+	
+	//Rotateの重みづけ関数
+	public void weightingRotate(){
+		int weight = 0;
 
+		WeightDB = new WeightDBcreate(this);
+		db = WeightDB.getWritableDatabase(); 
+		
+		GlobalMarkername gmn =new GlobalMarkername();
+        Pattid = gmn.GetData();
+		
+        String sql = "SELECT Weight FROM PersonalProfaile Where PattID="+ Pattid;
+		Cursor cursor = db.rawQuery(sql,null);
+		while(cursor.moveToNext()){
+			weight = cursor.getInt(0);
+		}
+		
+		weight = weight + 1;
+		
+		ContentValues values = new ContentValues();
+		values.put("Weight",weight);
+		System.out.println("単語Weight : " + weight);
+		
+		int ret;
+        try {  
+            ret = db.update("PersonalProfaile", values, "PattID = "+Pattid, null);  
+        } finally {
+        	System.out.println("DB表示 : " + db.rawQuery("SELECT * FROM PersonalProfaile",null));
+        	WeightDB.close();  
+        }
+        if (ret == -1){
+            //Toast.makeText(WeightDB.this, "Update失敗", Toast.LENGTH_SHORT).show(); 
+        } else {
+            //Toast.makeText(this, "Update成功", Toast.LENGTH_SHORT).show();
+        }
+	}
+	
 	/** This Handler is used to post message back onto the main thread of the application */
 	private class MainHandler extends Handler {
 		@Override
@@ -167,6 +233,88 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			}
 		}
 	}
+	
+	
+	//メニュー設定
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	// TODO Auto-generated method stub
+	super.onCreateOptionsMenu(menu);
+	MenuInflater inflater = getMenuInflater();
+	inflater.inflate(R.menu.menu, menu);
+	return true;
+	}
+
+	//メニューセレクト
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		
+	// TODO Auto-generated method stub
+	super.onOptionsItemSelected(item);
+
+	switch (item.getItemId()) {
+		case R.id.MENU_SCALE:
+			mode = MENU_SCALE;
+			return true;
+		case R.id.MENU_ROTATE:
+			mode = MENU_ROTATE;
+			return true;
+		case R.id.MENU_TRANSLATE:
+			mode = MENU_TRANSLATE;
+	        return true;
+		default:
+		String message = "Error";
+		break;
+		}
+		return true;
+	}
+
+	private float lastX=0;
+	private float lastY=0;
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		
+		switch (event.getAction()) {
+		case MotionEvent.ACTION_DOWN:
+			lastX = event.getX();
+			lastY = event.getY();
+		break;
+
+		case MotionEvent.ACTION_MOVE:
+			float dX = lastX - event.getX();
+			float dY = lastY - event.getY();
+			lastX = event.getX();
+			lastY = event.getY();
+			if(mRenderer != null) {
+				switch(mode) {
+					case MENU_SCALE:
+						mRenderer.setScale(dY/500.0f);
+						//Weight.weightingRotate(); //移動の重みづけ
+						weightingRotate();
+					break;
+					case MENU_ROTATE:
+						mRenderer.setXrot(0.2f*-dY);
+						mRenderer.setYrot(0.2f*-dX);
+						//Weight.weightingRotate(); //移動の重みづけ
+						weightingRotate();
+					break;
+					case MENU_TRANSLATE:
+						mRenderer.setXpos(-dX/100.0f);
+						mRenderer.setYpos(dY/100.0f);
+						//Weight.weightingRotate(); //移動の重みづけ
+						weightingRotate();
+					break;
+					}
+				}
+				break;
+
+		case MotionEvent.ACTION_UP:
+		break;
+		}
+		return true;
+	}
+
 
 	private static final int DIALOG_LOADING = 0;
 
@@ -294,13 +442,29 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		super.onCreate(icicle);
 
 		// Renderer for metasequoia model
-//		String[] modelName = new String[2];
-//		modelName[0] = "droid.mqo";
-//		modelName[1] = "miku01.mqo";
-//		float[] modelScale = new float[] {0.01f, 0.03f};
-//		mRenderer = new ModelRenderer(getAssets(), modelName, modelScale);
-//		mRenderer.setMainHandler(mHandler);
-
+		String[] modelName = new String[2];
+		modelName[0] = "nizimasu.mqo";
+		modelName[1] = "kamakiri.mqo";
+		
+		WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+        Display disp = wm.getDefaultDisplay();
+        int width = disp.getWidth();
+        int height = disp.getHeight();
+		float[] modelScale = null;
+	
+		//端末のディスプレイサイズ毎に３ＤＣＧのスケールを変化
+		
+        if(width == 480 & height == 800) {
+        	 modelScale = new float[] {0.01f, 0.01f};     
+        } else if(width == 800 && height == 480) {
+        	 modelScale = new float[] {0.01f, 0.01f};
+		} else if(width == 1280 && height == 736) {
+        	 modelScale = new float[] {0.01f, 0.01f};
+		}
+        
+		mRenderer = new ModelRenderer(getAssets(), modelName, modelScale);
+		mRenderer.setMainHandler(mHandler);
+/*
 		// Renderer of min3d
 		_initSceneHander = new Handler();
 		_updateSceneHander = new Handler();
@@ -314,6 +478,7 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		mRenderer = new Renderer(scene);
 		Shared.renderer(mRenderer);
 
+*/
 		requestWindowFeature(Window.FEATURE_PROGRESS);
 
 		Window win = getWindow();
@@ -334,6 +499,7 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 	}
 
+	
     private void changeGLSurfaceViewState() {
         // If the camera resumes behind the lock screen, the orientation
         // will be portrait. That causes OOM when we try to allocation GPU
@@ -358,9 +524,10 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			for (int i = 0; i < 2; i++) {
 				width[i] = 80;
 			}
+			// パターン登録？
 			ArrayList<InputStream> patt = new ArrayList<InputStream>();
-			patt.add(getResources().openRawResource(R.raw.patthiro));
-			patt.add(getResources().openRawResource(R.raw.pattkanji));
+			patt.add(getResources().openRawResource(R.raw.pattnizimasu));
+			patt.add(getResources().openRawResource(R.raw.pattmaazi));
 			arToolkitDrawer = new ARToolkitDrawer(camePara, width, patt, mRenderer);
 
 
@@ -483,21 +650,6 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	}
 
 	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-		switch (event.getAction()) {
-			case MotionEvent.ACTION_DOWN:
-				break;
-
-			case MotionEvent.ACTION_MOVE:
-				break;
-
-			case MotionEvent.ACTION_UP:
-				break;
-		}
-		return true;
-	}
-
-	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
 		Log.d(TAG, "surfaceChanged");
 
@@ -572,6 +724,7 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		stopPreview();
 		mSurfaceHolder = null;
+		mRenderer.timer.print();
 	}
 	
 	private void closeCamera() {
