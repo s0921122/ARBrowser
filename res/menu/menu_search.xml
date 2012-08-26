@@ -1,0 +1,13 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/search_to_cg" 
+          android:title="[3DCG]">
+    </item>
+    <item android:id="@+id/search_to_quest" 
+          android:title="[Quest]">
+    </item>
+    
+    <item android:id="@+id/exit" 
+          android:title="Exit">
+    </item>
+</menu>

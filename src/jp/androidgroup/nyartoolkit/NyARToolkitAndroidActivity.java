@@ -40,8 +40,11 @@ package jp.androidgroup.nyartoolkit;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import org.takanolab.ar.search.SearchActivity;
+
 import com.android.camera.CameraHardwareException;
 import com.android.camera.CameraHolder;
+import com.paar.ch9.MainActivity;
 
 import min3d.Shared;
 import min3d.animation.AnimationObject3d;
@@ -202,6 +205,7 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		// TODO Auto-generated method stub
 		super.onOptionsItemSelected(item);
 	
+		Intent intent = null;
 		switch (item.getItemId()) {
 			case R.id.MENU_SCALE:
 				mode = MENU_SCALE;
@@ -218,6 +222,16 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			case R.id.MENU_CHANGE_MODE:
 				arToolkitDrawer.toggleARMode();
 		        return true;
+			case R.id.MENU_QUEST_MODE:
+            	// change to Quest activity
+                intent = new Intent(NyARToolkitAndroidActivity.this, MainActivity.class);
+                startActivity(intent);
+		        return true;
+            case R.id.MENU_SEARCH:
+            	// change to search activity
+                intent = new Intent(NyARToolkitAndroidActivity.this, SearchActivity.class);
+                startActivity(intent);
+                return true;
 			default:
 			String message = "Error";
 			break;
