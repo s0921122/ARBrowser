@@ -31,9 +31,8 @@ import java.nio.ByteBuffer;
 
 import javax.microedition.khronos.opengles.*;
 
-import jp.androidgroup.nyartoolkit.GlobalArea;
-
 import android.content.res.*;
+import android.os.Environment;
 import android.util.Log;
 
 /**
@@ -50,8 +49,6 @@ import android.util.Log;
  */
 public class KGLMetaseq extends KGLModelData
 {
-	GlobalArea area = GlobalArea.getInstace();
-	
     /**
      * 「"」で囲まれた文字を取り出す
      * 
@@ -957,11 +954,16 @@ public class KGLMetaseq extends KGLModelData
 	GLObject glo = null;
 	ArrayList<GLObject> globjs = new ArrayList<GLObject>();
 	try {
-	    //fis = am.open(msqname);
+//	    fis = am.open(msqname);
 	    // isr = new InputStreamReader(fis) ;
 	    // br = new BufferedReader(isr);
-	    //br = new multiInput(fis);
-	    br = new multiInput(new FileInputStream(new File(area.path + "/" + area.getModelname())));
+		String pathSd = new StringBuilder()
+        .append(Environment.getExternalStorageDirectory().getPath())
+        .append("/")
+        .toString();
+		
+	    br = new multiInput(new FileInputStream(new File(pathSd + msqname)));
+//	    br = new multiInput(fis);
 	    while ((chankName = Chank(br, false)) != null) {
 		/*
 		 * for( int i = 0 ; i < chankName.length ; i++ ) {

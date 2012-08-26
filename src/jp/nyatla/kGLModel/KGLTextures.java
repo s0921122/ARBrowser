@@ -28,12 +28,11 @@ import java.io.*;           // For File
 
 import javax.microedition.khronos.opengles.*;
 
-import jp.androidgroup.nyartoolkit.GlobalArea;
-
 import android.content.res.*;
 import android.graphics.*;
 //import android.opengl.GLU;
 import android.opengl.GLUtils;
+import android.os.Environment;
 
 /**
  * テクスチャの生成と管理<br>
@@ -45,7 +44,6 @@ import android.opengl.GLUtils;
  *
  */
 public class KGLTextures {
-	GlobalArea area = GlobalArea.getInstace();
     public AssetManager am;
     /**
      * texture nameの保存コンテナ<br>
@@ -165,9 +163,13 @@ public class KGLTextures {
     protected Bitmap loadTexture(String texname, String alpname)
     {
 		try {
-			//InputStream is = am.open(texname);
-			String tpath = area.path + "/" + area.getModelname().substring(0, area.getModelname().length()-4) + ".jpg";
-			InputStream is = new FileInputStream(new File(tpath));
+//			InputStream is = am.open(texname);
+			String pathSd = new StringBuilder()
+	        .append(Environment.getExternalStorageDirectory().getPath())
+	        .append("/")
+	        .toString();
+			
+			InputStream is = new FileInputStream(new File(pathSd + texname));
 			return BitmapFactory.decodeStream(is);
 		} catch (Throwable e) {
 		}

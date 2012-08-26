@@ -146,9 +146,6 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 
 	private MediaPlayer mMediaPlayer = null;
 	
-	// 別のクラスで使えるように値を保持するクラス
-	GlobalArea area = GlobalArea.getInstace();
-	
 	//重みづけクラス
 	//private WeightingWord Weight = new WeightingWord();
 	
@@ -483,14 +480,6 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		win.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.main);
-        Button Select_btn = (Button)findViewById(R.id.btn_select);
-        Select_btn.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				// TODO 自動生成されたメソッド・スタブ
-				SelectModelFile();
-			}
-		});
         mSurfaceView = (SurfaceView) findViewById(R.id.camera_preview);
 		mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -827,71 +816,6 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
         mHandler.sendEmptyMessageDelayed(CLEAR_SCREEN_DELAY, SCREEN_DELAY);
     }
     
-    private void SelectModelFile(){
-		// ファイルリストを取得
-		String[] items = new File(area.path).list();
-		ArrayList<String> mqo = new ArrayList<String>();
-		// 拡張子がmqoのものだけを抽出
-		for(int i=0;items.length>i;i++){
-			if(items[i].endsWith("mqo")){
-				mqo.add(items[i]);
-			}
-		}
-		// キャンセル用
-		mqo.add("キャンセル");
-
-		// 表示用の配列
-		final String[] mqolist = (String[]) mqo.toArray(new String[0]);
-		
-		// ファイル選択ダイアログ
-		new AlertDialog.Builder(this)
-		.setTitle("ファイルを選択")
-		.setItems(mqolist, new DialogInterface.OnClickListener(){
-			public void onClick(DialogInterface dialog, int which) {
-				// 選択されたものがmqoのとき
-				if (which < mqolist.length-1){
-					// 選択されたモデル名を取得
-					area.setModelname(mqolist[which]);
-					
-					ini2();
-					
-					//File filePath = new File(path + "/" + mqolist[which]);
-					//Toast.makeText(NyDropLink.this,"ファイルパス：「" + filePath.getPath() + "」を選択しました。", Toast.LENGTH_LONG).show();
-				}
-			}
-		}
-				).show();
-	}
-
-    private void ini2(){
-    	
-    	FrameLayout frame = (FrameLayout)findViewById(R.id.frame);
-    	frame.removeView(mGLSurfaceView);
-    	mGLSurfaceView = null;
-    	arToolkitDrawer = null;
-    	
-    	InputStream camePara = getResources().openRawResource(R.raw.camera_para);
-    	int[] width = new int[2];
-    	for (int i = 0; i < 2; i++) {
-    		width[i] = 80;
-    	}
-    	// パターン登録？
-    	ArrayList<InputStream> patt = new ArrayList<InputStream>();
-    	patt.add(getResources().openRawResource(R.raw.pattnizimasu));
-    	patt.add(getResources().openRawResource(R.raw.pattmaazi));
-    	arToolkitDrawer = new ARToolkitDrawer(camePara, width, patt, mRenderer);
-    	
-    	
-    	mGLSurfaceView = new GLSurfaceView(this);
-		mGLSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
-		mGLSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
-		mGLSurfaceView.setZOrderOnTop(true);
-		mGLSurfaceView.setRenderer(mRenderer);
-		frame.addView(mGLSurfaceView);
-        
-    }
-
-
     //----------------------- for min3d ------------------------
     public Scene scene;
 
