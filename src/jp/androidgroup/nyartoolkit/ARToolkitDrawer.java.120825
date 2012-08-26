@@ -128,9 +128,6 @@ public class ARToolkitDrawer
 	private int loopCnt = 0;
 	private int detectCnt[];
 	
-	//モード設定
-	private int ar_mode = 0;
-	
 	/**
 	 * Constructor
 	 *
@@ -242,26 +239,6 @@ public class ARToolkitDrawer
 		}
 	}
 
-	public void changeARMode (int ar_mode) {
-		this.ar_mode = ar_mode;
-	}
-	
-	public void toggleARMode () {
-		if (ar_mode == 1) {
-			ar_mode = 0;
-		} else {
-			ar_mode = 1;
-		}
-	}
-	
-	public void objectClear () {
-
-		for (int i = 0; i < MARKER_MAX; i++) {
-			isShow[i] = false;
-
-		}
-		mRenderer.objectClear();
-	}
 	/**
 	 * 描画処理部分
 	 *  メインループ処理と読み替えても良い
@@ -308,114 +285,98 @@ public class ARToolkitDrawer
 
 		boolean isDetect = false;
 
-		if (ar_mode == 0) {
-			// An OpenGL object will be drawn if matched.
-			if (found_markers > 0) {
-				Log.d("AR draw", "!!!!!!!!!!!exist marker." + found_markers + "!!!!!!!!!!!");
-				// Projection transformation.
-				float[] cameraRHf = new float[16];
-				toCameraFrustumRHf(ar_param, cameraRHf);
 
-				if (found_markers > MARKER_MAX)
-					found_markers = MARKER_MAX;
-				for (int i = 0; i < found_markers; i++) {
-					if (nya.getConfidence(i) < 0.50f)
-						continue;
-					try {
-						ar_code_index[i] = nya.getARCodeIndex(i);
-						NyARTransMatResult transmat_result = ar_transmat_result;
-						//マーカーの一致度取得
-						nya.getTransmationMatrix(i, transmat_result);
-						toCameraViewRHf(transmat_result, resultf[i]);
-						isDetect = true;
-					} catch (NyARException e) {
-						Log.e("AR draw", "getCameraViewRH failed", e);
-						return;
-					}
-				}
-				mRenderer.objectPointChanged(found_markers, ar_code_index, resultf, cameraRHf);
-			} else {
-				Log.d("AR draw", "not exist marker.");
+		// ONとOFFの決定
+		if (found_markers > 0) {
+			Log.d("AR draw", "marker is found.");
+//			if (found_markers > MARKER_MAX)
+//				found_markers = MARKER_MAX;
 
-				mRenderer.objectClear();
-			}
-
-		} else {
-			// ONとOFFの決定
-			if (found_markers > 0) {
-				Log.d("AR draw", "marker is found.");
-				// MARKER_MAX回ループさせても、エラーにならないので、とりあえずそうする。
-				for (int i = 0; i < MARKER_MAX; i++) {
-					if (nya.getConfidence(i) < 0.60f) {
-						detectCnt[i]=0;
-					} else {
-						detectCnt[i]++;
-					}
-					
-					Log.d("AR draw", i + " is shown");
-					Log.d("AR draw", "detect count=" + detectCnt[i] + "," + i);
-				}
-			}
-			
-			// 表示モードフラグ
-			shouldShow = false;
+			// MARKER_MAX回ループさせても、エラーにならないので、とりあえずそうする。
 			for (int i = 0; i < MARKER_MAX; i++) {
-				// 表示を安定させるため、n回連続してマーカ認識に成功したら、オンとオフを切り替える
-				// Galaxy Nexusでは、とりあえずn=10とした。
-				if (detectCnt[i] > 10) {
-					isShow[i] = true;
-					detectCnt[i] = 0;
+				if (nya.getConfidence(i) < 0.60f) {
+					detectCnt[i]=0;
+//					continue;
+				} else {
+					detectCnt[i]++;
 				}
-			}
-			
-			// 一つでも表示フラグ(isShow)がtrueであったら、表示モードに入る (sholdShow => true)
-			for (int i = 0; i < MARKER_MAX; i++) {
-				if (isShow[i]) {
-					shouldShow = true;
-					break;
-				}
-					
-			}
-			Log.d("AR draw", "should show=" + shouldShow);
-			
-			// An OpenGL object will be drawn if matched.
-			if (shouldShow) {
 				
-				Log.d("AR draw", "!!!!!!!!!!!exist marker." + found_markers + "!!!!!!!!!!!");
-				// Projection transformation.
-				float[] cameraRHf = new float[16];
-				toCameraFrustumRHf(ar_param, cameraRHf);
-
-	
-				// MARKER_MAX回ループさせても、エラーにならないので、とりあえずそうする。
-				for (int i = 0; i < MARKER_MAX; i++) {
-
-					if (!isShow[i])
-						continue;
-					
-					try {
-	
-						ar_code_index[i] = nya.getARCodeIndex(i);
-						NyARTransMatResult transmat_result = ar_transmat_result;
-						nya.getTransmationMatrix(i, transmat_result);
-						toCameraViewRHf(transmat_result, resultf[i]);
-						isDetect = true;
-						
-						Log.d("AR draw", "isShow=" + isShow);
-					} catch (NyARException e) {
-						Log.e("AR draw", "getCameraViewRH failed", e);
-						return;
-					}
-				}
-				mRenderer.objectPointChanged(found_markers, ar_code_index, resultf, cameraRHf);
-				loopCnt++;
-				Log.d("AR draw", "LoopCnt=" + loopCnt);
-			} else {
-				Log.d("AR draw", "not exist marker.");
-	
-				mRenderer.objectClear();
+				Log.d("AR draw", i + " is shown");
+				Log.d("AR draw", "detect count=" + detectCnt[i] + "," + i);
 			}
+		}
+		
+		// 表示モードフラグ
+		shouldShow = false;
+		for (int i = 0; i < MARKER_MAX; i++) {
+			// 表示を安定させるため、n回連続してマーカ認識に成功したら、オンとオフを切り替える
+			// Galaxy Nexusでは、とりあえずn=10とした。
+			if (detectCnt[i] > 10) {
+				if (isShow[i]) {
+					isShow[i] = false;
+					
+				} else {
+					isShow[i] = true;
+				}
+				detectCnt[i] = 0;
+			}
+		}
+		
+		// 一つでも表示フラグ(isShow)がtrueであったら、表示モードに入る (sholdShow => true)
+		for (int i = 0; i < MARKER_MAX; i++) {
+			if (isShow[i]) {
+				shouldShow = true;
+				break;
+			}
+				
+		}
+		Log.d("AR draw", "should show=" + shouldShow);
+		
 
+		// An OpenGL object will be drawn if matched.
+//		if (found_markers > 0) {
+		if (shouldShow) {
+			
+			Log.d("AR draw", "!!!!!!!!!!!exist marker." + found_markers + "!!!!!!!!!!!");
+			// Projection transformation.
+			float[] cameraRHf = new float[16];
+			toCameraFrustumRHf(ar_param, cameraRHf);
+
+//			if (found_markers > MARKER_MAX)
+//				found_markers = MARKER_MAX;
+
+			// MARKER_MAX回ループさせても、エラーにならないので、とりあえずそうする。
+//			for (int i = 0; i < found_markers; i++) {
+			for (int i = 0; i < MARKER_MAX; i++) {
+			
+			// ONとOFF判定に移動
+//				if (nya.getConfidence(i) < 0.60f)
+//					continue;
+				
+				if (!isShow[i])
+					continue;
+				
+				try {
+
+					ar_code_index[i] = nya.getARCodeIndex(i);
+					NyARTransMatResult transmat_result = ar_transmat_result;
+					nya.getTransmationMatrix(i, transmat_result);
+					toCameraViewRHf(transmat_result, resultf[i]);
+					isDetect = true;
+					
+					Log.d("AR draw", "isShow=" + isShow);
+				} catch (NyARException e) {
+					Log.e("AR draw", "getCameraViewRH failed", e);
+					return;
+				}
+			}
+			mRenderer.objectPointChanged(found_markers, ar_code_index, resultf, cameraRHf);
+			loopCnt++;
+			Log.d("AR draw", "LoopCnt=" + loopCnt);
+		} else {
+			Log.d("AR draw", "not exist marker.");
+
+			mRenderer.objectClear();
 		}
 		if (isDetect) {
 			if (mMediaPlayer != null) {

@@ -22,10 +22,7 @@ package jp.nyatla.kGLModel;
 
 import java.util.*;
 import java.nio.*;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
 import java.io.*;           // For File
-import java.io.InputStream;
 //import java.awt.image.*;    // For BufferedImage
 //import javax.imageio.*;     // For ImageIO
 
@@ -35,6 +32,7 @@ import android.content.res.*;
 import android.graphics.*;
 //import android.opengl.GLU;
 import android.opengl.GLUtils;
+import android.os.Environment;
 
 /**
  * テクスチャの生成と管理<br>
@@ -165,7 +163,13 @@ public class KGLTextures {
     protected Bitmap loadTexture(String texname, String alpname)
     {
 		try {
-			InputStream is = am.open(texname);
+//			InputStream is = am.open(texname);
+			String pathSd = new StringBuilder()
+	        .append(Environment.getExternalStorageDirectory().getPath())
+	        .append("/")
+	        .toString();
+			
+			InputStream is = new FileInputStream(new File(pathSd + texname));
 			return BitmapFactory.decodeStream(is);
 		} catch (Throwable e) {
 		}
