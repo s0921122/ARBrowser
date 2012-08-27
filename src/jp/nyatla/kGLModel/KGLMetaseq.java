@@ -959,7 +959,7 @@ public class KGLMetaseq extends KGLModelData
 	    // br = new BufferedReader(isr);
 		String pathSd = new StringBuilder()
         .append(Environment.getExternalStorageDirectory().getPath())
-        .append("/")
+        .append("/").append("3DModelData/")
         .toString();
 		
 	    br = new multiInput(new FileInputStream(new File(pathSd + msqname)));

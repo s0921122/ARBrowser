@@ -37,19 +37,26 @@
 
 package jp.androidgroup.nyartoolkit;
 
+import java.nio.Buffer;
+import java.nio.IntBuffer;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import jp.nyatla.kGLModel.KGLException;
 import jp.nyatla.kGLModel.KGLModelData;
-
+import android.content.Context;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.opengl.Matrix;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.Display;
+import android.view.WindowManager;
 
 /**
  * Rendering 3DModels.
@@ -95,12 +102,16 @@ public class ModelRenderer implements GLSurfaceView.Renderer
 	public int mWidth;
 	public int mHeight;
 
+	public boolean takeScreen;
+	Bitmap screenshot;
+
 	public ModelRenderer(AssetManager am, String[] modelName, float[] modelScale) {
         this.am = am;
 		cameraReset();
 		for (int i = 0; i < PATT_MAX; i++) {
 	        this.modelName[i] = modelName[i];
 			this.modelScale[i] = modelScale[i];
+			Log.e("ERROR","Loop on "+i);
 		}
     }
 
@@ -213,13 +224,40 @@ public class ModelRenderer implements GLSurfaceView.Renderer
  					lightCleanup(gl);
  			}
 		} else {
- 			gl.glMatrixMode(GL10.GL_PROJECTION);
- 			gl.glLoadMatrixf(cameraRHf, 0);
- 	 		gl.glEnable(GL10.GL_DEPTH_TEST);
+			gl.glMatrixMode(GL10.GL_PROJECTION);
+			gl.glLoadMatrixf(cameraRHf, 0);
+			gl.glEnable(GL10.GL_DEPTH_TEST);
+		}
+		if(takeScreen){
+			int takeWidth = mWidth+0;
+			int takeHeight = mHeight+0;
+			takeScreen = false;
+			int[] tmp = new int[takeHeight*takeWidth];
+			int[] screenshot = new int[takeHeight*takeWidth];
+			Buffer screenshotBuffer = IntBuffer.wrap(tmp);
+			screenshotBuffer.position(0);
+			gl.glReadPixels(0,0,takeWidth,takeHeight, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, screenshotBuffer); 
+			for(int i=0; i<takeHeight; i++) 
+			{
+				//remember, that OpenGL bitmap is incompatible with Android bitmap 
+				//and so, some correction need.      
+				for(int j=0; j<takeWidth; j++) 
+				{ 
+					int pix=tmp[i*takeWidth+j]; 
+					int pb=(pix>>16)&0xff; 
+					int pr=(pix<<16)&0x00ff0000; 
+					int pix1=(pix&0xff00ff00) | pr | pb; 
+					screenshot[(takeHeight-i-1)*takeWidth+j]=pix1; 
+				} 
+			}  
+            this.screenshot = Bitmap.createBitmap(screenshot, takeWidth, takeHeight, Config.ARGB_8888);
 		}
 		makeFramerate();
     }
 
+    public Bitmap getScreen(){
+    	return screenshot;
+    }
 	private Handler mainHandler;
 
 	public void setMainHandler(Handler handler) {

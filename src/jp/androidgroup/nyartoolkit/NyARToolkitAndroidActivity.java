@@ -37,23 +37,20 @@
 
 package jp.androidgroup.nyartoolkit;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import org.takanolab.ar.search.SearchActivity;
-
-import com.android.camera.CameraHardwareException;
-import com.android.camera.CameraHolder;
-import com.paar.ch9.MainActivity;
-
-import min3d.Shared;
 import min3d.animation.AnimationObject3d;
-import min3d.core.Renderer;
 import min3d.core.Scene;
 import min3d.parser.IParser;
 import min3d.parser.Parser;
 import min3d.vos.Light;
-import min3d.vos.TextureVo;
+
+import org.takanolab.ar.search.SearchActivity;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -63,10 +60,12 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Matrix;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
-import android.hardware.Camera.PreviewCallback;
 import android.media.MediaPlayer;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
@@ -83,12 +82,14 @@ import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.android.camera.CameraHardwareException;
+import com.android.camera.CameraHolder;
+import com.paar.ch9.MainActivity;
 
 //public class NyARToolkitAndroidActivity extends Activity implements View.OnClickListener, SurfaceHolder.Callback {
 public class NyARToolkitAndroidActivity extends Activity implements View.OnClickListener, SurfaceHolder.Callback, min3d.interfaces.ISceneController {
@@ -232,6 +233,9 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
                 intent = new Intent(NyARToolkitAndroidActivity.this, SearchActivity.class);
                 startActivity(intent);
                 return true;
+            case R.id.shot:
+            	shot();
+            	return true;
 			default:
 			String message = "Error";
 			break;
@@ -363,13 +367,25 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
+		
+		String[] items = new File("sdcard/3DModelData").list();
+		ArrayList<String> mqo = new ArrayList<String>();
+		// 拡張子がmqoのものだけを抽出
+		for(int i=0;items.length>i;i++){
+			if(items[i].endsWith("mqo")){
+				mqo.add(items[i]);
+			}
+		}
 
+		// 表示用の配列
+		final String[] modelName = (String[]) mqo.toArray(new String[0]);
+		
 		// Renderer for metasequoia model
-		String[] modelName = new String[2];
+		//String[] modelName = new String[2];
 //		modelName[0] = "droid.mqo";
 //		modelName[1] = "miku01.mqo";
-		modelName[0] = "Kiageha.mqo";
-		modelName[1] = "kamakiri.mqo";
+		//modelName[0] = "Kiageha.mqo";
+		//modelName[1] = "kamakiri.mqo";
 		float[] modelScale = new float[] {0.01f, 0.03f};
 		mRenderer = new ModelRenderer(getAssets(), modelName, modelScale);
 		mRenderer.setMainHandler(mHandler);
@@ -642,6 +658,7 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
         // We need to save the holder for later use, even when the mCameraDevice
         // is null. This could happen if onResume() is invoked after this
         // function.
+        holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         mSurfaceHolder = holder;
 
         // The mCameraDevice will be null if it fails to connect to the camera
@@ -800,9 +817,109 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mHandler.sendEmptyMessageDelayed(CLEAR_SCREEN_DELAY, SCREEN_DELAY);
     }
+    
+    private void showToast(String msg){
+		Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+    }
+    // シャッターが押されたときに呼ばれるコールバック
+    private Camera.ShutterCallback mShutterListener =
+    		new Camera.ShutterCallback() {
+    	public void onShutter() {
+    		//
+    	}
+    };
 
-//----------------------- for min3d ------------------------
-	public Scene scene;
+    // JPEGイメージ生成後に呼ばれるコールバック
+    private Camera.PictureCallback mPictureListener =
+    		new Camera.PictureCallback() {
+    	public void onPictureTaken(byte[] data, Camera camera) {
+    		Bitmap screen = null,capture = null;
+    		// SDカードにJPEGデータを保存する
+    		while(true){
+    			if(mRenderer.screenshot != null) break;
+    		}
+    		//try {
+    			screen = mRenderer.getScreen();
+    			Log.e("debug","screen get");
+    			//FileOutputStream fos = new FileOutputStream("/sdcard/camera_gl.png");
+    			//temp.compress(CompressFormat.PNG, 90, fos);
+    			//fos.flush();
+    			//fos.close();					
+    		//} catch (FileNotFoundException e) {
+    			//errorMsg = e.getMessage();
+    		//	e.printStackTrace();
+    		//} catch (IOException e) {
+    			//errorMsg = e.getMessage();
+    	//		e.printStackTrace();
+    	//	}
+    		//showToast("saved");
+    		if (data != null) {
+    			//FileOutputStream myFOS = null;
+    			try {
+    				//myFOS = new FileOutputStream("/sdcard/camera_test.jpg");
+    				//myFOS.write(data);
+    				//myFOS.close();
+    		    	BitmapFactory.Options options = new BitmapFactory.Options();  
+    		    	options.inSampleSize = 4;
+    				capture = BitmapFactory.decodeByteArray(data, 0, data.length,options);
+    				Log.e("debug","capture get");
+    				conposit(capture,screen);
+    				showToast("save");
+    			} catch (Exception e) {
+    				e.printStackTrace();
+    			}
+
+    			//mCameraDevice.startPreview();
+    		}
+    	}
+    };
+    private void shot(){
+    	File file = new File("/sdcard/xxx.jpg");
+    	if(!file.exists()){
+    		try {
+    			file.createNewFile();
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+    	}
+    	mRenderer.takeScreen = true;
+    	mCameraDevice.takePicture(null, null, mPictureListener);
+    }
+
+    private boolean conposit(Bitmap image, Bitmap frame) {
+    	Log.e("debug","overray");
+    	//ARGB_8888,RGB_565,ARGB_4444
+    	int width = image.getWidth();
+    	int height = image.getHeight();
+    	Log.e("debug","createbitmap");
+    	Bitmap newBitmap = Bitmap.createBitmap(width, height,Bitmap.Config.RGB_565);
+    	Log.e("debug","canvas");
+    	Canvas canvas = new Canvas(newBitmap);
+    	canvas.drawBitmap(image, 0, 0, (Paint)null);
+    	canvas.drawBitmap(frame, 0, 0, (Paint)null);
+    	Log.e("debug","recycle");
+    	image.recycle();
+    	frame.recycle();
+    	//return newBitmap;
+    	
+    	FileOutputStream fos;
+		try {
+			Log.e("debug","output");
+			fos = new FileOutputStream("/sdcard/xxx0.jpg");
+			newBitmap.compress(CompressFormat.JPEG, 100, fos);
+			return true;
+		} catch (FileNotFoundException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+			return false;
+		}finally{
+			Log.e("debug","startPreview");
+			mCameraDevice.startPreview();
+		}
+    }
+
+ 	//----------------------- for min3d ------------------------
+ 	public Scene scene;
 
 	protected Handler _initSceneHander;
 	protected Handler _updateSceneHander;
