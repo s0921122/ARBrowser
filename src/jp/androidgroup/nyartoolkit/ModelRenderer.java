@@ -228,10 +228,11 @@ public class ModelRenderer implements GLSurfaceView.Renderer
 			gl.glLoadMatrixf(cameraRHf, 0);
 			gl.glEnable(GL10.GL_DEPTH_TEST);
 		}
+		// スクリーンショット
 		if(takeScreen){
-			int takeWidth = mWidth+0;
-			int takeHeight = mHeight+0;
 			takeScreen = false;
+			int takeWidth = mWidth;
+			int takeHeight = mHeight;
 			int[] tmp = new int[takeHeight*takeWidth];
 			int[] screenshot = new int[takeHeight*takeWidth];
 			Buffer screenshotBuffer = IntBuffer.wrap(tmp);
@@ -249,7 +250,8 @@ public class ModelRenderer implements GLSurfaceView.Renderer
 					int pix1=(pix&0xff00ff00) | pr | pb; 
 					screenshot[(takeHeight-i-1)*takeWidth+j]=pix1; 
 				} 
-			}  
+			} 
+			// アルファありのBitmapを作成する
             this.screenshot = Bitmap.createBitmap(screenshot, takeWidth, takeHeight, Config.ARGB_8888);
 		}
 		makeFramerate();

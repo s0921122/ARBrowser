@@ -100,45 +100,45 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	private static final int FIRST_TIME_INIT = 2;
 	private static final int RESTART_PREVIEW = 3;
 	private static final int CLEAR_SCREEN_DELAY = 4;
-    private static final int SET_CAMERA_PARAMETERS_WHEN_IDLE = 5;
-    public static final int SHOW_LOADING = 6;
-    public static final int HIDE_LOADING = 7;
+	private static final int SET_CAMERA_PARAMETERS_WHEN_IDLE = 5;
+	public static final int SHOW_LOADING = 6;
+	public static final int HIDE_LOADING = 7;
 
-    private static final int SCREEN_DELAY = 2 * 60 * 1000;
-    
+	private static final int SCREEN_DELAY = 2 * 60 * 1000;
+
 	private android.hardware.Camera.Parameters mParameters;
 
-    private OrientationEventListener mOrientationListener;
-    private int mLastOrientation = 0;
-    private SharedPreferences mPreferences;
-	
-    private static final int IDLE = 1;
-    private static final int SNAPSHOT_IN_PROGRESS = 2;
-	
-    // 3DCG manipulation
-    private final int MENU_SCALE = 0;
+	private OrientationEventListener mOrientationListener;
+	private int mLastOrientation = 0;
+	private SharedPreferences mPreferences;
+
+	private static final int IDLE = 1;
+	private static final int SNAPSHOT_IN_PROGRESS = 2;
+
+	// 3DCG manipulation
+	private final int MENU_SCALE = 0;
 	private final int MENU_ROTATE = 1;
 	private final int MENU_TRANSLATE = 2;
 	private final int MENU_SCREENSHOT = 3;
-	
+
 	// coordinates for 3DCG
 	private float lastX=0;
 	private float lastY=0;
-	
-	private int mode = MENU_SCALE;
-	
-	private int mStatus = IDLE;
-	
-    private android.hardware.Camera mCameraDevice;
-    private SurfaceView mSurfaceView;
-    private SurfaceHolder mSurfaceHolder = null;
-    private boolean mStartPreviewFail = false;
 
-    private GLSurfaceView mGLSurfaceView = null;
+	private int mode = MENU_SCALE;
+
+	private int mStatus = IDLE;
+
+	private android.hardware.Camera mCameraDevice;
+	private SurfaceView mSurfaceView;
+	private SurfaceHolder mSurfaceHolder = null;
+	private boolean mStartPreviewFail = false;
+
+	private GLSurfaceView mGLSurfaceView = null;
 	// Renderer for metasequoia model
-    private ModelRenderer mRenderer;
+	private ModelRenderer mRenderer;
 	// Renderer of min3d
-//    private Renderer mRenderer;
+	//    private Renderer mRenderer;
 
 	private boolean mPreviewing;
 	private boolean mPausing;
@@ -157,43 +157,43 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-            	case RESTART_PREVIEW: {
-            		restartPreview();
-            		break;
-            	}
+			case RESTART_PREVIEW: {
+				restartPreview();
+				break;
+			}
 
-				case CLEAR_SCREEN_DELAY: {
-					getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-					break;
-				}
+			case CLEAR_SCREEN_DELAY: {
+				getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+				break;
+			}
 
-                case FIRST_TIME_INIT: {
-                    initializeFirstTime();
-                    break;
-                }
+			case FIRST_TIME_INIT: {
+				initializeFirstTime();
+				break;
+			}
 
-                case SHOW_LOADING: {
-					showDialog(DIALOG_LOADING);
-					break;
+			case SHOW_LOADING: {
+				showDialog(DIALOG_LOADING);
+				break;
+			}
+			case HIDE_LOADING: {
+				try {
+					dismissDialog(DIALOG_LOADING);
+					removeDialog(DIALOG_LOADING);
+				} catch (IllegalArgumentException e) {
 				}
-				case HIDE_LOADING: {
-					try {
-						dismissDialog(DIALOG_LOADING);
-						removeDialog(DIALOG_LOADING);
-					} catch (IllegalArgumentException e) {
-					}
-					break;
-				}
+				break;
+			}
 			}
 		}
 	}
-	
+
 	//メニュー設定
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// TODO Auto-generated method stub
 		super.onCreateOptionsMenu(menu);
-		
+
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.menu, menu);
 		return true;
@@ -202,41 +202,41 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	//メニューセレクト
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		
+
 		// TODO Auto-generated method stub
 		super.onOptionsItemSelected(item);
-	
+
 		Intent intent = null;
 		switch (item.getItemId()) {
-			case R.id.MENU_SCALE:
-				mode = MENU_SCALE;
-				return true;
-			case R.id.MENU_ROTATE:
-				mode = MENU_ROTATE;
-				return true;
-			case R.id.MENU_TRANSLATE:
-				mode = MENU_TRANSLATE;
-		        return true;
-			case R.id.MENU_CLEAR:
-				arToolkitDrawer.objectClear();
-		        return true;
-			case R.id.MENU_CHANGE_MODE:
-				arToolkitDrawer.toggleARMode();
-		        return true;
-			case R.id.MENU_QUEST_MODE:
-            	// change to Quest activity
-                intent = new Intent(NyARToolkitAndroidActivity.this, MainActivity.class);
-                startActivity(intent);
-		        return true;
-            case R.id.MENU_SEARCH:
-            	// change to search activity
-                intent = new Intent(NyARToolkitAndroidActivity.this, SearchActivity.class);
-                startActivity(intent);
-                return true;
-            case R.id.shot:
-            	shot();
-            	return true;
-			default:
+		case R.id.MENU_SCALE:
+			mode = MENU_SCALE;
+			return true;
+		case R.id.MENU_ROTATE:
+			mode = MENU_ROTATE;
+			return true;
+		case R.id.MENU_TRANSLATE:
+			mode = MENU_TRANSLATE;
+			return true;
+		case R.id.MENU_CLEAR:
+			arToolkitDrawer.objectClear();
+			return true;
+		case R.id.MENU_CHANGE_MODE:
+			arToolkitDrawer.toggleARMode();
+			return true;
+		case R.id.MENU_QUEST_MODE:
+			// change to Quest activity
+			intent = new Intent(NyARToolkitAndroidActivity.this, MainActivity.class);
+			startActivity(intent);
+			return true;
+		case R.id.MENU_SEARCH:
+			// change to search activity
+			intent = new Intent(NyARToolkitAndroidActivity.this, SearchActivity.class);
+			startActivity(intent);
+			return true;
+		case R.id.shot:
+			shot();
+			return true;
+		default:
 			String message = "Error";
 			break;
 		}
@@ -254,8 +254,8 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			// dialog.setIndeterminate(true);
 			dialog.setCancelable(false);
 			dialog.getWindow().setFlags
-				(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,
-				 WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+			(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,
+					WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 			return dialog;
 		}
 		default:
@@ -264,7 +264,7 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	}
 
 	public static int roundOrientation(int orientationInput) {
-//		Log.d("roundOrientation", "orientationInput:" + orientationInput);
+		//		Log.d("roundOrientation", "orientationInput:" + orientationInput);
 		int orientation = orientationInput;
 		if (orientation == -1)
 			orientation = 0;
@@ -286,71 +286,71 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		return retVal;
 	}
 
-    // Snapshots can only be taken after this is called. It should be called
-    // once only. We could have done these things in onCreate() but we want to
-    // make preview screen appear as soon as possible.
-    private void initializeFirstTime() {
-        if (mFirstTimeInitialized) return;
+	// Snapshots can only be taken after this is called. It should be called
+	// once only. We could have done these things in onCreate() but we want to
+	// make preview screen appear as soon as possible.
+	private void initializeFirstTime() {
+		if (mFirstTimeInitialized) return;
 
-        Log.d(TAG, "initializeFirstTime");
+		Log.d(TAG, "initializeFirstTime");
 
-        // Create orientation listenter. This should be done first because it
-        // takes some time to get first orientation.
-        mOrientationListener =
-                new OrientationEventListener(this) {
-            @Override
-            public void onOrientationChanged(int orientation) {
-                // We keep the last known orientation. So if the user
-                // first orient the camera then point the camera to
-                // floor/sky, we still have the correct orientation.
-                if (orientation != ORIENTATION_UNKNOWN) {
-                    orientation += 90;
-                }
-                orientation = roundOrientation(orientation);
-                if (orientation != mLastOrientation) {
-                    mLastOrientation = orientation;
-                }
-            }
-        };
-        mOrientationListener.enable();
+		// Create orientation listenter. This should be done first because it
+		// takes some time to get first orientation.
+		mOrientationListener =
+				new OrientationEventListener(this) {
+			@Override
+			public void onOrientationChanged(int orientation) {
+				// We keep the last known orientation. So if the user
+				// first orient the camera then point the camera to
+				// floor/sky, we still have the correct orientation.
+				if (orientation != ORIENTATION_UNKNOWN) {
+					orientation += 90;
+				}
+				orientation = roundOrientation(orientation);
+				if (orientation != mLastOrientation) {
+					mLastOrientation = orientation;
+				}
+			}
+		};
+		mOrientationListener.enable();
 
-        mFirstTimeInitialized = true;
-        
-        changeGLSurfaceViewState();
-    }
+		mFirstTimeInitialized = true;
 
-    // If the activity is paused and resumed, this method will be called in
-    // onResume.
-    private void initializeSecondTime() {
+		changeGLSurfaceViewState();
+	}
+
+	// If the activity is paused and resumed, this method will be called in
+	// onResume.
+	private void initializeSecondTime() {
 		Log.d(TAG, "initializeSecondTime");
 
 		// Start orientation listener as soon as possible because it takes
-        // some time to get first orientation.
-        mOrientationListener.enable();
-        
-        changeGLSurfaceViewState();
-    }
+		// some time to get first orientation.
+		mOrientationListener.enable();
 
-    /**
-     * Callback interface used to deliver copies of preview frames as they are displayed.
-     */
-    private final class PreviewCallback
-            implements android.hardware.Camera.PreviewCallback {
+		changeGLSurfaceViewState();
+	}
+
+	/**
+	 * Callback interface used to deliver copies of preview frames as they are displayed.
+	 */
+	private final class PreviewCallback
+	implements android.hardware.Camera.PreviewCallback {
 
 		@Override
 		public void onPreviewFrame(byte [] data, Camera camera) {
 			Log.d(TAG, "PreviewCallback.onPreviewFrame");
 
 			if (mPausing) {
-                return;
-            }
+				return;
+			}
 
 			if(data != null) {
 				Log.d(TAG, "data exist");
 
 				if (arToolkitDrawer != null)
 					arToolkitDrawer.draw(data);
-				
+
 			} else {
 				try {
 					// The measure against over load.
@@ -359,7 +359,7 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 					;
 				}
 			}
-        	restartPreview();
+			restartPreview();
 		}
 	}
 
@@ -367,7 +367,8 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		
+
+		// SDcard内のファイルを列挙する
 		String[] items = new File("sdcard/3DModelData").list();
 		ArrayList<String> mqo = new ArrayList<String>();
 		// 拡張子がmqoのものだけを抽出
@@ -376,94 +377,93 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 				mqo.add(items[i]);
 			}
 		}
-
-		// 表示用の配列
+		// コレクションを配列に変換
 		final String[] modelName = (String[]) mqo.toArray(new String[0]);
-		
+
 		// Renderer for metasequoia model
 		//String[] modelName = new String[2];
-//		modelName[0] = "droid.mqo";
-//		modelName[1] = "miku01.mqo";
+		//		modelName[0] = "droid.mqo";
+		//		modelName[1] = "miku01.mqo";
 		//modelName[0] = "Kiageha.mqo";
 		//modelName[1] = "kamakiri.mqo";
 		float[] modelScale = new float[] {0.01f, 0.03f};
 		mRenderer = new ModelRenderer(getAssets(), modelName, modelScale);
 		mRenderer.setMainHandler(mHandler);
 
-// Test later		
-//		WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
-//        Display disp = wm.getDefaultDisplay();
-//        int width = disp.getWidth();
-//        int height = disp.getHeight();
-//		float[] modelScale = null;
-//	
-//		//端末のディスプレイサイズ毎に３ＤＣＧのスケールを変化
-//		
-//        if(width == 480 & height == 800) {
-//        	 modelScale = new float[] {0.01f, 0.01f};     
-//        } else if(width == 800 && height == 480) {
-//        	 modelScale = new float[] {0.01f, 0.01f};
-//		} else if(width == 1280 && height == 736) {
-//        	 modelScale = new float[] {0.01f, 0.01f};
-//		}
-//        
-//		mRenderer = new ModelRenderer(getAssets(), modelName, modelScale);
-//		mRenderer.setMainHandler(mHandler);
+		// Test later		
+		//		WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+		//        Display disp = wm.getDefaultDisplay();
+		//        int width = disp.getWidth();
+		//        int height = disp.getHeight();
+		//		float[] modelScale = null;
+		//	
+		//		//端末のディスプレイサイズ毎に３ＤＣＧのスケールを変化
+		//		
+		//        if(width == 480 & height == 800) {
+		//        	 modelScale = new float[] {0.01f, 0.01f};     
+		//        } else if(width == 800 && height == 480) {
+		//        	 modelScale = new float[] {0.01f, 0.01f};
+		//		} else if(width == 1280 && height == 736) {
+		//        	 modelScale = new float[] {0.01f, 0.01f};
+		//		}
+		//        
+		//		mRenderer = new ModelRenderer(getAssets(), modelName, modelScale);
+		//		mRenderer.setMainHandler(mHandler);
 
-///////// Min3d //////////
+		///////// Min3d //////////
 		// Renderer of min3d
-//		_initSceneHander = new Handler();
-//		_updateSceneHander = new Handler();
+		//		_initSceneHander = new Handler();
+		//		_updateSceneHander = new Handler();
 
 		//
 		// These 4 lines are important.
 		//
-//		Shared.context(this);
-//		scene = new Scene(this);
-//		scene.backgroundTransparent(true);
-//		mRenderer = new Renderer(scene);
-//		Shared.renderer(mRenderer);
-///////// Min3d //////////
-		
+		//		Shared.context(this);
+		//		scene = new Scene(this);
+		//		scene.backgroundTransparent(true);
+		//		mRenderer = new Renderer(scene);
+		//		Shared.renderer(mRenderer);
+		///////// Min3d //////////
+
 		requestWindowFeature(Window.FEATURE_PROGRESS);
 
 		Window win = getWindow();
 		win.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		win.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        setContentView(R.layout.main);
-        mSurfaceView = (SurfaceView) findViewById(R.id.camera_preview);
+		setContentView(R.layout.main);
+		mSurfaceView = (SurfaceView) findViewById(R.id.camera_preview);
 		mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
 		mSurfaceView.setKeepScreenOn(true);
 
-        // don't set mSurfaceHolder here. We have it set ONLY within
-        // surfaceChanged / surfaceDestroyed, other parts of the code
-        // assume that when it is set, the surface is also set.
-        SurfaceHolder holder = mSurfaceView.getHolder();
-        holder.addCallback(this);
-        holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+		// don't set mSurfaceHolder here. We have it set ONLY within
+		// surfaceChanged / surfaceDestroyed, other parts of the code
+		// assume that when it is set, the surface is also set.
+		SurfaceHolder holder = mSurfaceView.getHolder();
+		holder.addCallback(this);
+		holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 	}
 
-    private void changeGLSurfaceViewState() {
-        // If the camera resumes behind the lock screen, the orientation
-        // will be portrait. That causes OOM when we try to allocation GPU
-        // memory for the GLSurfaceView again when the orientation changes. So,
-        // we delayed initialization of GLSurfaceView until the orientation
-        // becomes landscape.
-        Configuration config = getResources().getConfiguration();
-        if (config.orientation == Configuration.ORIENTATION_LANDSCAPE
-                && !mPausing && mFirstTimeInitialized) {
-            if (mGLSurfaceView == null) initializeGLSurfaceView();
-        } else if (mGLSurfaceView != null) {
-            finalizeGLSurfaceView();
-        }
-    }
+	private void changeGLSurfaceViewState() {
+		// If the camera resumes behind the lock screen, the orientation
+		// will be portrait. That causes OOM when we try to allocation GPU
+		// memory for the GLSurfaceView again when the orientation changes. So,
+		// we delayed initialization of GLSurfaceView until the orientation
+		// becomes landscape.
+		Configuration config = getResources().getConfiguration();
+		if (config.orientation == Configuration.ORIENTATION_LANDSCAPE
+				&& !mPausing && mFirstTimeInitialized) {
+			if (mGLSurfaceView == null) initializeGLSurfaceView();
+		} else if (mGLSurfaceView != null) {
+			finalizeGLSurfaceView();
+		}
+	}
 
-    private void initializeGLSurfaceView() {
+	private void initializeGLSurfaceView() {
 
 		// init ARToolkit.
-    	if (arToolkitDrawer == null) {
+		if (arToolkitDrawer == null) {
 			InputStream camePara = getResources().openRawResource(R.raw.camera_para);
 			int[] width = new int[2];
 			for (int i = 0; i < 2; i++) {
@@ -475,14 +475,14 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			arToolkitDrawer = new ARToolkitDrawer(camePara, width, patt, mRenderer);
 
 
-//			mMediaPlayer = MediaPlayer.create(this, R.raw.miku_voice);
-//			mMediaPlayer.setLooping(true);
-//	        mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-//	            public void onPrepared(MediaPlayer mediaplayer) {
-//	    			arToolkitDrawer.setMediaPlayer(mediaplayer);
-//	            }
-//	        });
-    	}
+			//			mMediaPlayer = MediaPlayer.create(this, R.raw.miku_voice);
+			//			mMediaPlayer.setLooping(true);
+			//	        mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+			//	            public void onPrepared(MediaPlayer mediaplayer) {
+			//	    			arToolkitDrawer.setMediaPlayer(mediaplayer);
+			//	            }
+			//	        });
+		}
 
 		FrameLayout frame = (FrameLayout) findViewById(R.id.frame);
 		mGLSurfaceView = new GLSurfaceView(this);
@@ -490,20 +490,20 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		mGLSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
 		mGLSurfaceView.setZOrderOnTop(true);
 		mGLSurfaceView.setRenderer(mRenderer);
-        frame.addView(mGLSurfaceView);
-    }
+		frame.addView(mGLSurfaceView);
+	}
 
-    private void finalizeGLSurfaceView() {
+	private void finalizeGLSurfaceView() {
 		FrameLayout frame = (FrameLayout) findViewById(R.id.frame);
-        frame.removeView(mGLSurfaceView);
-        mGLSurfaceView = null;
+		frame.removeView(mGLSurfaceView);
+		mGLSurfaceView = null;
 
-        if (mMediaPlayer != null)
-        	mMediaPlayer.release();
-        mMediaPlayer = null;
+		if (mMediaPlayer != null)
+			mMediaPlayer.release();
+		mMediaPlayer = null;
 
-        arToolkitDrawer = null;
-    }
+		arToolkitDrawer = null;
+	}
 
 	@Override
 	protected void onDestroy() {
@@ -532,26 +532,26 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 
 		mPausing = false;
 
-        // Start the preview if it is not started.
-        if (!mPreviewing && !mStartPreviewFail && (mSurfaceHolder != null)) {
-            try {
-                startPreview();
-            } catch (Exception e) {
-                showCameraErrorAndFinish();
-                return;
-            }
-        }
+		// Start the preview if it is not started.
+		if (!mPreviewing && !mStartPreviewFail && (mSurfaceHolder != null)) {
+			try {
+				startPreview();
+			} catch (Exception e) {
+				showCameraErrorAndFinish();
+				return;
+			}
+		}
 
-        if (mSurfaceHolder != null) {
-            // If first time initialization is not finished, put it in the
-            // message queue.
-            if (!mFirstTimeInitialized) {
-                mHandler.sendEmptyMessage(FIRST_TIME_INIT);
-            } else {
-                initializeSecondTime();
-            }
-        }
-        keepScreenOnAwhile();
+		if (mSurfaceHolder != null) {
+			// If first time initialization is not finished, put it in the
+			// message queue.
+			if (!mFirstTimeInitialized) {
+				mHandler.sendEmptyMessage(FIRST_TIME_INIT);
+			} else {
+				initializeSecondTime();
+			}
+		}
+		keepScreenOnAwhile();
 	}
 
 	@Override
@@ -559,18 +559,18 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		Log.d(TAG, "onPause");
 		mPausing = true;
 		stopPreview();
-        // Close the camera now because other activities may need to use it.
-        closeCamera();
-        resetScreenOn();
-        changeGLSurfaceViewState();
+		// Close the camera now because other activities may need to use it.
+		closeCamera();
+		resetScreenOn();
+		changeGLSurfaceViewState();
 
-        if (mFirstTimeInitialized) {
-            mOrientationListener.disable();
-        }
+		if (mFirstTimeInitialized) {
+			mOrientationListener.disable();
+		}
 
-        // Remove the messages in the event queue.
-        mHandler.removeMessages(RESTART_PREVIEW);
-        mHandler.removeMessages(FIRST_TIME_INIT);
+		// Remove the messages in the event queue.
+		mHandler.removeMessages(RESTART_PREVIEW);
+		mHandler.removeMessages(FIRST_TIME_INIT);
 
 		super.onPause();
 	}
@@ -578,44 +578,44 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
-			case CROP_MSG: {
-				Intent intent = new Intent();
-				if (data != null) {
-					Bundle extras = data.getExtras();
-					if (extras != null) {
-						intent.putExtras(extras);
-					}
+		case CROP_MSG: {
+			Intent intent = new Intent();
+			if (data != null) {
+				Bundle extras = data.getExtras();
+				if (extras != null) {
+					intent.putExtras(extras);
 				}
-				setResult(resultCode, intent);
-				finish();
-				break;
 			}
+			setResult(resultCode, intent);
+			finish();
+			break;
+		}
 		}
 	}
 
-//	@Override
-//	public boolean onTouchEvent(MotionEvent event) {
-//		switch (event.getAction()) {
-//			case MotionEvent.ACTION_DOWN:
-//				break;
-//
-//			case MotionEvent.ACTION_MOVE:
-//				break;
-//
-//			case MotionEvent.ACTION_UP:
-//				break;
-//		}
-//		return true;
-//	}
+	//	@Override
+	//	public boolean onTouchEvent(MotionEvent event) {
+	//		switch (event.getAction()) {
+	//			case MotionEvent.ACTION_DOWN:
+	//				break;
+	//
+	//			case MotionEvent.ACTION_MOVE:
+	//				break;
+	//
+	//			case MotionEvent.ACTION_UP:
+	//				break;
+	//		}
+	//		return true;
+	//	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		
+
 		switch (event.getAction()) {
 		case MotionEvent.ACTION_DOWN:
 			lastX = event.getX();
 			lastY = event.getY();
-		break;
+			break;
 
 		case MotionEvent.ACTION_MOVE:
 			float dX = lastX - event.getX();
@@ -624,93 +624,93 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			lastY = event.getY();
 			if(mRenderer != null) {
 				switch(mode) {
-					case MENU_SCALE:
-						mRenderer.setScale(dY/500.0f);
+				case MENU_SCALE:
+					mRenderer.setScale(dY/500.0f);
 					break;
-					case MENU_ROTATE:
-						mRenderer.setXrot(0.2f*-dY);
-						mRenderer.setYrot(0.2f*-dX);
+				case MENU_ROTATE:
+					mRenderer.setXrot(0.2f*-dY);
+					mRenderer.setYrot(0.2f*-dX);
 					break;
-					case MENU_TRANSLATE:
-						mRenderer.setXpos(-dX/100.0f);
-						mRenderer.setYpos(dY/100.0f);
+				case MENU_TRANSLATE:
+					mRenderer.setXpos(-dX/100.0f);
+					mRenderer.setYpos(dY/100.0f);
 					break;
-					}
 				}
-				break;
+			}
+			break;
 
 		case MotionEvent.ACTION_UP:
-		break;
+			break;
 		}
 		return true;
 	}
-	
+
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
 		Log.d(TAG, "surfaceChanged");
 
 		// Make sure we have a surface in the holder before proceeding.
-        if (holder.getSurface() == null) {
-            Log.d(TAG, "holder.getSurface() == null");
-            return;
-        }
+		if (holder.getSurface() == null) {
+			Log.d(TAG, "holder.getSurface() == null");
+			return;
+		}
 
-        // We need to save the holder for later use, even when the mCameraDevice
-        // is null. This could happen if onResume() is invoked after this
-        // function.
-        holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        mSurfaceHolder = holder;
+		// We need to save the holder for later use, even when the mCameraDevice
+		// is null. This could happen if onResume() is invoked after this
+		// function.
+		holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+		mSurfaceHolder = holder;
 
-        // The mCameraDevice will be null if it fails to connect to the camera
-        // hardware. In this case we will show a dialog and then finish the
-        // activity, so it's OK to ignore it.
-        if (mCameraDevice == null) {
+		// The mCameraDevice will be null if it fails to connect to the camera
+		// hardware. In this case we will show a dialog and then finish the
+		// activity, so it's OK to ignore it.
+		if (mCameraDevice == null) {
 
-        	/*
-        	 * To reduce startup time, we start the preview in another thread.
-        	 * We make sure the preview is started at the end of surfaceChanged.
-        	 */
-        	Thread startPreviewThread = new Thread(new Runnable() {
-        		public void run() {
-        			try {
-        				mStartPreviewFail = false;
-        				startPreview();
-        			} catch (Exception e) {
-        				// In eng build, we throw the exception so that test tool
-        				// can detect it and report it
-        				if ("eng".equals(Build.TYPE)) {
-        					throw new RuntimeException(e);
-        				}
-        				mStartPreviewFail = true;
-        			}
-        		}
-        	});
-        	startPreviewThread.start();
+			/*
+			 * To reduce startup time, we start the preview in another thread.
+			 * We make sure the preview is started at the end of surfaceChanged.
+			 */
+			Thread startPreviewThread = new Thread(new Runnable() {
+				public void run() {
+					try {
+						mStartPreviewFail = false;
+						startPreview();
+					} catch (Exception e) {
+						// In eng build, we throw the exception so that test tool
+						// can detect it and report it
+						if ("eng".equals(Build.TYPE)) {
+							throw new RuntimeException(e);
+						}
+						mStartPreviewFail = true;
+					}
+				}
+			});
+			startPreviewThread.start();
 
-        	// Make sure preview is started.
-        	try {
-        		startPreviewThread.join();
-        		if (mStartPreviewFail) {
-        			showCameraErrorAndFinish();
-        			return;
-        		}
-        	} catch (InterruptedException ex) {
-        		// ignore
-        	}
-        }
+			// Make sure preview is started.
+			try {
+				startPreviewThread.join();
+				if (mStartPreviewFail) {
+					showCameraErrorAndFinish();
+					return;
+				}
+			} catch (InterruptedException ex) {
+				// ignore
+			}
+		}
 
 		// Sometimes surfaceChanged is called after onPause.
 		// Ignore it.
 		if (mPausing || isFinishing()) return;
 
-        // If first time initialization is not finished, send a message to do
-        // it later. We want to finish surfaceChanged as soon as possible to let
-        // user see preview first.
-        if (!mFirstTimeInitialized) {
-            mHandler.sendEmptyMessage(FIRST_TIME_INIT);
-        } else {
-            initializeSecondTime();
-        }
+		// If first time initialization is not finished, send a message to do
+		// it later. We want to finish surfaceChanged as soon as possible to let
+		// user see preview first.
+		if (!mFirstTimeInitialized) {
+			mHandler.sendEmptyMessage(FIRST_TIME_INIT);
+		} else {
+			initializeSecondTime();
+		}
 	}
 
 	@Override
@@ -722,38 +722,38 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		stopPreview();
 		mSurfaceHolder = null;
 	}
-	
+
 	private void closeCamera() {
-        if (mCameraDevice != null) {
-            CameraHolder.instance().release();
-            mCameraDevice = null;
-            mPreviewing = false;
-        }
-	}
-	
-    private void ensureCameraDevice() throws CameraHardwareException {
-        if (mCameraDevice == null) {
-            mCameraDevice = CameraHolder.instance().open();
-        }
+		if (mCameraDevice != null) {
+			CameraHolder.instance().release();
+			mCameraDevice = null;
+			mPreviewing = false;
+		}
 	}
 
-    private void showCameraErrorAndFinish() {
-        Resources ress = getResources();
-        com.android.camera.Util.showFatalErrorAndFinish(NyARToolkitAndroidActivity.this,
-                ress.getString(R.string.camera_error_title),
-                ress.getString(R.string.cannot_connect_camera));
-    }
-	
+	private void ensureCameraDevice() throws CameraHardwareException {
+		if (mCameraDevice == null) {
+			mCameraDevice = CameraHolder.instance().open();
+		}
+	}
+
+	private void showCameraErrorAndFinish() {
+		Resources ress = getResources();
+		com.android.camera.Util.showFatalErrorAndFinish(NyARToolkitAndroidActivity.this,
+				ress.getString(R.string.camera_error_title),
+				ress.getString(R.string.cannot_connect_camera));
+	}
+
 	public void restartPreview() {
 		Log.d(TAG, "restartPreview");
-        try {
-            startPreview();
-        } catch (CameraHardwareException e) {
-            showCameraErrorAndFinish();
-            return;
-        }
+		try {
+			startPreview();
+		} catch (CameraHardwareException e) {
+			showCameraErrorAndFinish();
+			return;
+		}
 	}
-	
+
 	private void setPreviewDisplay(SurfaceHolder holder) {
 		try {
 			mCameraDevice.setPreviewDisplay(holder);
@@ -762,20 +762,20 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			throw new RuntimeException("setPreviewDisplay failed", ex);
 		}
 	}
-	
-    private void startPreview() throws CameraHardwareException {
-        if (mPausing || isFinishing()) return;
 
-        ensureCameraDevice();
-		
+	private void startPreview() throws CameraHardwareException {
+		if (mPausing || isFinishing()) return;
+
+		ensureCameraDevice();
+
 		// If we're previewing already, stop the preview first (this will blank
 		// the screen).
-        // FIXME: don't stop for avoiding blank screen.
-//        if (mPreviewing) stopPreview();
+		// FIXME: don't stop for avoiding blank screen.
+		//        if (mPreviewing) stopPreview();
 
-        setPreviewDisplay(mSurfaceHolder);
-        if (!mPreviewing)
-        	setCameraParameters();
+		setPreviewDisplay(mSurfaceHolder);
+		if (!mPreviewing)
+			setCameraParameters();
 
 		mCameraDevice.setOneShotPreviewCallback(mPreviewCallback);
 
@@ -789,11 +789,11 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		mPreviewing = true;
 		mStatus = IDLE;
 	}
-	
+
 	private void stopPreview() {
 		if (mCameraDevice != null && mPreviewing) {
 			Log.v(TAG, "stopPreview");
-    		mCameraDevice.setOneShotPreviewCallback(null);
+			mCameraDevice.setOneShotPreviewCallback(null);
 			mCameraDevice.stopPreview();
 		}
 		mPreviewing = false;
@@ -801,141 +801,150 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 
 	private void setCameraParameters() {
 		mParameters = mCameraDevice.getParameters();
-		
+
 		mParameters.setPreviewSize(320, 240);
-		
+
 		mCameraDevice.setParameters(mParameters);
 	}
 
-    private void resetScreenOn() {
-        mHandler.removeMessages(CLEAR_SCREEN_DELAY);
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-    }
+	private void resetScreenOn() {
+		mHandler.removeMessages(CLEAR_SCREEN_DELAY);
+		getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+	}
 
-    private void keepScreenOnAwhile() {
-        mHandler.removeMessages(CLEAR_SCREEN_DELAY);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        mHandler.sendEmptyMessageDelayed(CLEAR_SCREEN_DELAY, SCREEN_DELAY);
-    }
-    
-    private void showToast(String msg){
+	private void keepScreenOnAwhile() {
+		mHandler.removeMessages(CLEAR_SCREEN_DELAY);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		mHandler.sendEmptyMessageDelayed(CLEAR_SCREEN_DELAY, SCREEN_DELAY);
+	}
+
+	/**
+	 * Toastを呼ぶ
+	 * @param msg
+	 */
+	private void showToast(String msg){
 		Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-    }
-    // シャッターが押されたときに呼ばれるコールバック
-    private Camera.ShutterCallback mShutterListener =
-    		new Camera.ShutterCallback() {
-    	public void onShutter() {
-    		//
-    	}
-    };
+	}
 
-    // JPEGイメージ生成後に呼ばれるコールバック
-    private Camera.PictureCallback mPictureListener =
-    		new Camera.PictureCallback() {
-    	public void onPictureTaken(byte[] data, Camera camera) {
-    		Bitmap screen = null,capture = null;
-    		// SDカードにJPEGデータを保存する
-    		while(true){
-    			if(mRenderer.screenshot != null) break;
-    		}
-    		//try {
-    			screen = mRenderer.getScreen();
-    			Log.e("debug","screen get");
-    			//FileOutputStream fos = new FileOutputStream("/sdcard/camera_gl.png");
-    			//temp.compress(CompressFormat.PNG, 90, fos);
-    			//fos.flush();
-    			//fos.close();					
-    		//} catch (FileNotFoundException e) {
-    			//errorMsg = e.getMessage();
-    		//	e.printStackTrace();
-    		//} catch (IOException e) {
-    			//errorMsg = e.getMessage();
-    	//		e.printStackTrace();
-    	//	}
-    		//showToast("saved");
-    		if (data != null) {
-    			//FileOutputStream myFOS = null;
-    			try {
-    				//myFOS = new FileOutputStream("/sdcard/camera_test.jpg");
-    				//myFOS.write(data);
-    				//myFOS.close();
-    		    	BitmapFactory.Options options = new BitmapFactory.Options();  
-    		    	options.inSampleSize = 4;
-    				capture = BitmapFactory.decodeByteArray(data, 0, data.length,options);
-    				Log.e("debug","capture get");
-    				conposit(capture,screen);
-    				showToast("save");
-    			} catch (Exception e) {
-    				e.printStackTrace();
-    			}
 
-    			//mCameraDevice.startPreview();
-    		}
-    	}
-    };
-    private void shot(){
-    	File file = new File("/sdcard/xxx.jpg");
-    	if(!file.exists()){
-    		try {
-    			file.createNewFile();
-    		} catch (IOException e) {
-    			e.printStackTrace();
-    		}
-    	}
-    	mRenderer.takeScreen = true;
-    	mCameraDevice.takePicture(null, null, mPictureListener);
-    }
+	// シャッターが押されたときに呼ばれるコールバック
+	private Camera.ShutterCallback mShutterListener =
+			new Camera.ShutterCallback() {
+		public void onShutter() {
+			//特に何もしない
+		}
+	};
 
-    private boolean conposit(Bitmap image, Bitmap frame) {
-    	Log.e("debug","overray");
-    	//ARGB_8888,RGB_565,ARGB_4444
-    	int width = image.getWidth();
-    	int height = image.getHeight();
-    	Log.e("debug","createbitmap");
-    	Bitmap newBitmap = Bitmap.createBitmap(width, height,Bitmap.Config.RGB_565);
-    	Log.e("debug","canvas");
-    	Canvas canvas = new Canvas(newBitmap);
-    	canvas.drawBitmap(image, 0, 0, (Paint)null);
-    	canvas.drawBitmap(frame, 0, 0, (Paint)null);
-    	Log.e("debug","recycle");
-    	image.recycle();
-    	frame.recycle();
-    	//return newBitmap;
-    	
-    	FileOutputStream fos;
+	// JPEGイメージ生成後に呼ばれるコールバック
+	private Camera.PictureCallback mPictureListener =
+			new Camera.PictureCallback() {
+		public void onPictureTaken(byte[] data, Camera camera) {
+			Bitmap screen = null,capture = null;
+			// Rendererのスクリーンショットができるまで待機
+			while(true){
+				if(mRenderer.screenshot != null) break;
+			}
+			// GLのスクリーンショット取得
+			screen = mRenderer.getScreen();
+			Log.e("debug","screen get");
+			
+			if (data != null) {
+				try {
+					// サイズを変更(4分の1？)
+					BitmapFactory.Options options = new BitmapFactory.Options();  
+					options.inSampleSize = 4;
+					// カメラ画像のBitmap作成
+					capture = BitmapFactory.decodeByteArray(data, 0, data.length,options);
+					Log.e("debug","capture get");
+					// 2枚のBitmapを重ね合わせる
+					conposit(capture,screen);
+					showToast("save");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	};
+	
+	/**
+	 * スクリーンショットをとる
+	 * 
+	 * @author s0921122
+	 * 
+	 */
+	private void shot(){
+		/*
+		File file = new File("/sdcard/xxx.jpg");
+		if(!file.exists()){
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		*/
+		mRenderer.takeScreen = true;
+		// 写真を撮る
+		mCameraDevice.takePicture(null, null, mPictureListener);
+	}
+
+	/**
+	 * Bitmapを重ねる
+	 * 
+	 * @param image
+	 * @param frame
+	 * @return 
+	 */
+	private boolean conposit(Bitmap image, Bitmap frame) {
+		Log.e("debug","overray");
+		//ARGB_8888,RGB_565,ARGB_4444
+		int width = image.getWidth();
+		int height = image.getHeight();
+		Log.e("debug","createbitmap");
+		// 合成するための下地
+		Bitmap newBitmap = Bitmap.createBitmap(width, height,Bitmap.Config.RGB_565);
+		Log.e("debug","canvas");
+		Canvas canvas = new Canvas(newBitmap);
+		canvas.drawBitmap(image, 0, 0, (Paint)null);
+		canvas.drawBitmap(frame, 0, 0, (Paint)null);
+		Log.e("debug","recycle");
+		image.recycle();
+		frame.recycle();
+
+		FileOutputStream fos;
 		try {
 			Log.e("debug","output");
 			fos = new FileOutputStream("/sdcard/xxx0.jpg");
 			newBitmap.compress(CompressFormat.JPEG, 100, fos);
 			return true;
 		} catch (FileNotFoundException e) {
-			// TODO 自動生成された catch ブロック
 			e.printStackTrace();
 			return false;
 		}finally{
 			Log.e("debug","startPreview");
+			// カメラのプレビュー再開
 			mCameraDevice.startPreview();
 		}
-    }
+	}
 
- 	//----------------------- for min3d ------------------------
- 	public Scene scene;
+	//----------------------- for min3d ------------------------
+	public Scene scene;
 
 	protected Handler _initSceneHander;
 	protected Handler _updateSceneHander;
 
 	final Runnable _initSceneRunnable = new Runnable()
 	{
-	    public void run() {
-	        onInitScene();
-	    }
+		public void run() {
+			onInitScene();
+		}
 	};
 
 	final Runnable _updateSceneRunnable = new Runnable()
 	{
-	    public void run() {
-	        onUpdateScene();
-	    }
+		public void run() {
+			onUpdateScene();
+		}
 	};
 
 	/**
@@ -1033,8 +1042,8 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	 */
 	public Runnable getUpdateSceneRunnable()
 	{
-	   	return _updateSceneRunnable;
+		return _updateSceneRunnable;
 	}
-//----------------------- for min3d ------------------------
+	//----------------------- for min3d ------------------------
 }
 

@@ -111,7 +111,7 @@ public class ARToolkitDrawer
 	// Renderer for metasequoia model
 	private ModelRenderer mRenderer = null;
 	// Renderer of min3d
-//    private Renderer mRenderer;
+	//    private Renderer mRenderer;
 
 	private MediaPlayer mMediaPlayer = null;
 
@@ -124,13 +124,13 @@ public class ARToolkitDrawer
 	//フラグ設定 
 	boolean isShow[];
 	boolean shouldShow = false;
-	
+
 	private int loopCnt = 0;
 	private int detectCnt[];
-	
+
 	//モード設定
 	private int ar_mode = 0;
-	
+
 	/**
 	 * Constructor
 	 *
@@ -142,8 +142,8 @@ public class ARToolkitDrawer
 	 */
 	// Renderer for metasequoia model
 	public ARToolkitDrawer(InputStream camePara, int[] width, ArrayList<InputStream> patt, ModelRenderer mRenderer) {
-	// Renderer of min3d
-//	public ARToolkitDrawer(InputStream camePara, int[] width, ArrayList<InputStream> patt, Renderer mRenderer) {
+		// Renderer of min3d
+		//	public ARToolkitDrawer(InputStream camePara, int[] width, ArrayList<InputStream> patt, Renderer mRenderer) {
 		this.mRenderer = mRenderer;
 
 		this.initialization(camePara, width, patt);
@@ -167,7 +167,7 @@ public class ARToolkitDrawer
 				// マーカーの分割数
 				ar_code[i] = new NyARCode(16, 16);
 				ar_code[i].loadARPatt(patt.get(i));
-				
+
 				detectCnt[i] = 0;
 				isShow[i] = false;
 			}
@@ -245,7 +245,7 @@ public class ARToolkitDrawer
 	public void changeARMode (int ar_mode) {
 		this.ar_mode = ar_mode;
 	}
-	
+
 	public void toggleARMode () {
 		if (ar_mode == 1) {
 			ar_mode = 0;
@@ -253,7 +253,7 @@ public class ARToolkitDrawer
 			ar_mode = 1;
 		}
 	}
-	
+
 	public void objectClear () {
 
 		for (int i = 0; i < MARKER_MAX; i++) {
@@ -293,7 +293,7 @@ public class ARToolkitDrawer
 		int ar_code_index[] = new int[MARKER_MAX];
 
 		createNyARTool(width, height);
-		
+
 		// Marker detection
 		try {
 			Log.d("AR draw", "Marker detection.");
@@ -351,12 +351,12 @@ public class ARToolkitDrawer
 					} else {
 						detectCnt[i]++;
 					}
-					
+
 					Log.d("AR draw", i + " is shown");
 					Log.d("AR draw", "detect count=" + detectCnt[i] + "," + i);
 				}
 			}
-			
+
 			// 表示モードフラグ
 			shouldShow = false;
 			for (int i = 0; i < MARKER_MAX; i++) {
@@ -367,40 +367,40 @@ public class ARToolkitDrawer
 					detectCnt[i] = 0;
 				}
 			}
-			
+
 			// 一つでも表示フラグ(isShow)がtrueであったら、表示モードに入る (sholdShow => true)
 			for (int i = 0; i < MARKER_MAX; i++) {
 				if (isShow[i]) {
 					shouldShow = true;
 					break;
 				}
-					
+
 			}
 			Log.d("AR draw", "should show=" + shouldShow);
-			
+
 			// An OpenGL object will be drawn if matched.
 			if (shouldShow) {
-				
+
 				Log.d("AR draw", "!!!!!!!!!!!exist marker." + found_markers + "!!!!!!!!!!!");
 				// Projection transformation.
 				float[] cameraRHf = new float[16];
 				toCameraFrustumRHf(ar_param, cameraRHf);
 
-	
+
 				// MARKER_MAX回ループさせても、エラーにならないので、とりあえずそうする。
 				for (int i = 0; i < MARKER_MAX; i++) {
 
 					if (!isShow[i])
 						continue;
-					
+
 					try {
-	
+
 						ar_code_index[i] = nya.getARCodeIndex(i);
 						NyARTransMatResult transmat_result = ar_transmat_result;
 						nya.getTransmationMatrix(i, transmat_result);
 						toCameraViewRHf(transmat_result, resultf[i]);
 						isDetect = true;
-						
+
 						Log.d("AR draw", "isShow=" + isShow);
 					} catch (NyARException e) {
 						Log.e("AR draw", "getCameraViewRH failed", e);
@@ -412,7 +412,7 @@ public class ARToolkitDrawer
 				Log.d("AR draw", "LoopCnt=" + loopCnt);
 			} else {
 				Log.d("AR draw", "not exist marker.");
-	
+
 				mRenderer.objectClear();
 			}
 
