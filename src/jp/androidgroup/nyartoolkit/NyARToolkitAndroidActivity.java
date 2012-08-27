@@ -43,6 +43,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 
 import min3d.animation.AnimationObject3d;
 import min3d.core.Scene;
@@ -233,7 +234,8 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			intent = new Intent(NyARToolkitAndroidActivity.this, SearchActivity.class);
 			startActivity(intent);
 			return true;
-		case R.id.shot:
+		case R.id.MENU_SCREEN_SHOT:
+			Log.e("debug","screen shot");
 			shot();
 			return true;
 		default:
@@ -368,6 +370,7 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 
+		/*
 		// SDcard内のファイルを列挙する
 		String[] items = new File("sdcard/3DModelData").list();
 		ArrayList<String> mqo = new ArrayList<String>();
@@ -379,13 +382,14 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		}
 		// コレクションを配列に変換
 		final String[] modelName = (String[]) mqo.toArray(new String[0]);
-
+        */
+		
 		// Renderer for metasequoia model
-		//String[] modelName = new String[2];
+		String[] modelName = new String[2];
 		//		modelName[0] = "droid.mqo";
 		//		modelName[1] = "miku01.mqo";
-		//modelName[0] = "Kiageha.mqo";
-		//modelName[1] = "kamakiri.mqo";
+		modelName[0] = "Kiageha.mqo";
+		modelName[1] = "kamakiri.mqo";
 		float[] modelScale = new float[] {0.01f, 0.03f};
 		mRenderer = new ModelRenderer(getAssets(), modelName, modelScale);
 		mRenderer.setMainHandler(mHandler);
@@ -832,6 +836,7 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			new Camera.ShutterCallback() {
 		public void onShutter() {
 			//特に何もしない
+			Log.e("debug","start Shuttercallback");
 		}
 	};
 
@@ -839,6 +844,7 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 	private Camera.PictureCallback mPictureListener =
 			new Camera.PictureCallback() {
 		public void onPictureTaken(byte[] data, Camera camera) {
+			Log.e("debug","start pucturecallback");
 			Bitmap screen = null,capture = null;
 			// Rendererのスクリーンショットができるまで待機
 			while(true){
@@ -847,10 +853,10 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			// GLのスクリーンショット取得
 			screen = mRenderer.getScreen();
 			Log.e("debug","screen get");
-			
+
 			if (data != null) {
 				try {
-					// サイズを変更(4分の1？)
+					// 作成するBitmapのサイズを変更(4分の1？)
 					BitmapFactory.Options options = new BitmapFactory.Options();  
 					options.inSampleSize = 4;
 					// カメラ画像のBitmap作成
@@ -863,6 +869,9 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 					e.printStackTrace();
 				}
 			}
+			Log.e("debug","startPreview");
+			// カメラのプレビュー再開
+			restartPreview();
 		}
 	};
 	
@@ -883,9 +892,13 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 			}
 		}
 		*/
+		Log.e("debug","takescreen = true");
 		mRenderer.takeScreen = true;
+		Log.e("debug","takepucpure start");
 		// 写真を撮る
-		mCameraDevice.takePicture(null, null, mPictureListener);
+		stopPreview();// エラーが出るなら止めればいいじゃない
+		mCameraDevice.takePicture(mShutterListener, null, mPictureListener);
+		Log.e("debug","takepicture end");
 	}
 
 	/**
@@ -900,9 +913,11 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		//ARGB_8888,RGB_565,ARGB_4444
 		int width = image.getWidth();
 		int height = image.getHeight();
+		
 		Log.e("debug","createbitmap");
 		// 合成するための下地
 		Bitmap newBitmap = Bitmap.createBitmap(width, height,Bitmap.Config.RGB_565);
+		
 		Log.e("debug","canvas");
 		Canvas canvas = new Canvas(newBitmap);
 		canvas.drawBitmap(image, 0, 0, (Paint)null);
@@ -914,16 +929,14 @@ public class NyARToolkitAndroidActivity extends Activity implements View.OnClick
 		FileOutputStream fos;
 		try {
 			Log.e("debug","output");
-			fos = new FileOutputStream("/sdcard/xxx0.jpg");
+			// ファイルに保存
+			String outpath = "/sdcard/ARBrowser" + new Date().getTime() + ".jpg";
+			fos = new FileOutputStream(outpath);
 			newBitmap.compress(CompressFormat.JPEG, 100, fos);
 			return true;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			return false;
-		}finally{
-			Log.e("debug","startPreview");
-			// カメラのプレビュー再開
-			mCameraDevice.startPreview();
 		}
 	}
 

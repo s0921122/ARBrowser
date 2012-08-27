@@ -16,12 +16,14 @@
     <item android:id="@+id/MENU_CHANGE_MODE"
     android:title="Change mode"
     android:numericShortcut="5" />
-   	
+    
     <item android:id="@+id/MENU_QUEST_MODE"
     android:title="[Quest]"
     android:numericShortcut="6" />
 	<item android:id="@+id/MENU_SEARCH"
   	android:title="[Search]"
   	android:numericShortcut="7" />
-	<item android:id="@+id/shot" android:title="Shot" android:numericShortcut="8"></item> 
+	<item android:id="@+id/MENU_SCREEN_SHOT"
+	android:title="Screen Shot" 
+	android:numericShortcut="8"/> 
 </menu>

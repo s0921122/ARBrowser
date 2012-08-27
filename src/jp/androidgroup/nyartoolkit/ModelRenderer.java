@@ -229,8 +229,10 @@ public class ModelRenderer implements GLSurfaceView.Renderer
 			gl.glEnable(GL10.GL_DEPTH_TEST);
 		}
 		// スクリーンショット
+		// よくわかってないけど取れる
 		if(takeScreen){
 			takeScreen = false;
+			Log.e("debug","takescreen false");
 			int takeWidth = mWidth;
 			int takeHeight = mHeight;
 			int[] tmp = new int[takeHeight*takeWidth];
@@ -260,6 +262,7 @@ public class ModelRenderer implements GLSurfaceView.Renderer
     public Bitmap getScreen(){
     	return screenshot;
     }
+    
 	private Handler mainHandler;
 
 	public void setMainHandler(Handler handler) {

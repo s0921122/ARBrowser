@@ -166,7 +166,8 @@ public class KGLTextures {
 //			InputStream is = am.open(texname);
 			String pathSd = new StringBuilder()
 	        .append(Environment.getExternalStorageDirectory().getPath())
-	        .append("/").append("3DModelData/")
+	        .append("/")
+	        //.append("3DModelData/")
 	        .toString();
 			
 			InputStream is = new FileInputStream(new File(pathSd + texname));
